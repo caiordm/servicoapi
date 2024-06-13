@@ -8,6 +8,10 @@ Rails.application.routes.draw do
     sessions: 'users/sessions',
     registrations: 'users/registrations'
   }
+
+  resources :tasks, only: [:index ,:create]
+  put "/tasks", to: "tasks#update"
+  delete "/tasks", to: "tasks#destroy"
     
   get "up" => "rails/health#show", as: :rails_health_check
 
