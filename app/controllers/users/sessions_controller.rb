@@ -2,7 +2,8 @@ class Users::SessionsController < Devise::SessionsController
   include RackSessionsFix
   respond_to :json
 
-  private  def respond_with(current_user, _opts = {})
+  private  
+  def respond_with(current_user, _opts = {})
     render json: {
       status: { 
         code: 200, message: 'Logged in successfully.',
@@ -14,7 +15,7 @@ class Users::SessionsController < Devise::SessionsController
   def respond_to_on_destroy
     if request.headers['Authorization'].present?
       jwt_payload = JWT.decode(request.headers['Authorization'].split(' ').last, 
-      Rails.application.credentials.devise_jwt_secret_key!).first      
+      ENV['RAILS_JWT_SECRET_KEY']).first      
       
       current_user = User.find(jwt_payload['sub'])
     end
@@ -30,6 +31,24 @@ class Users::SessionsController < Devise::SessionsController
         message: "Couldn't find an active session."
       }, status: :unauthorized
     end
+  end
+
+  def create
+    super do |resource|
+      return unsuccessful_login if resource.errors.present? # Chamar unsuccessful_login em caso de erro
+      respond_with(resource) # Chamar respond_with para sucesso
+    end
+  end
+
+  private
+
+  def unsuccessful_login
+    render json: {
+      status: {
+        code: 401,
+        message: 'Invalid email or password.'
+      }
+    }, status: :unauthorized
   end
   # before_action :configure_sign_in_params, only: [:create]
 
